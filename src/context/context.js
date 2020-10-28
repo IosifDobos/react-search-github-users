@@ -17,24 +17,6 @@ const GithubProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false)
     // user error checking
     const [error, setError] = useState({ show: false, msg: '' })
-    //check limit rate
-    const checkRequest = () => {
-        axios(`${rootUrl}/rate_limit`)
-            .then(({ data }) => {
-                let { rate: { remaining }, } = data;
-                setRequests(remaining)
-                if (remaining === 0) {
-                    // throw error
-                    toggleError(true, 'sorry you have exceeded  your hourly rate limit')
-                }
-            })
-            .catch((err) => console.log(err))
-    }
-
-    // error handling
-    function toggleError(show = false, msg = '') {
-        setError({ show, msg })
-    }
 
     // search for github users
     const searchGithubUser = async (user) => {
@@ -54,7 +36,7 @@ const GithubProvider = ({ children }) => {
             ])
                 .then((results) => {
                     const [repos, followers] = results;
-                    const status = 'fulfield'
+                    const status = 'fulfilled'
                     if (repos.status === status) {
                         setRepos(repos.value.data)
                     }
@@ -70,9 +52,33 @@ const GithubProvider = ({ children }) => {
         }
         checkRequest();
         setIsLoading(false);
+    };
+
+    //check limit rate
+    const checkRequest = () => {
+        axios(`${rootUrl}/rate_limit`)
+            .then(({ data }) => {
+                let { rate: { remaining }, } = data;
+                setRequests(remaining)
+                if (remaining === 0) {
+                    // throw error
+                    toggleError(true, 'sorry you have exceeded  your hourly rate limit')
+                }
+            })
+            .catch((err) => console.log(err))
     }
 
-    useEffect(checkRequest, [])
+    // error handling
+    function toggleError(show = false, msg = '') {
+        setError({ show, msg })
+    }
+    // error
+    useEffect(checkRequest, []);
+    // get initial user
+    useEffect(() => {
+        searchGithubUser('IosifDobos');
+    }, []);
+
 
     return <GithubContext.Provider
         value={{
@@ -82,7 +88,7 @@ const GithubProvider = ({ children }) => {
             requests,
             error,
             searchGithubUser,
-            isLoading
+            isLoading,
         }}
     >
         {children}
